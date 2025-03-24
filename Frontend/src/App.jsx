@@ -11,16 +11,17 @@ import Dashboard from './pages/Dashboard';
 import Verification from './pages/Verification';
 import KYCVerification from './pages/KYCVerification';
 import PropertyVerification from './pages/PropertyVerification';
+import CreatePropertyToken from './pages/CreatePropertyToken';
 
 function App() {
   return (
     <Router>
       <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 text-white bg-animate-gradient">
         <Navbar />
-        <AnimatePresence mode="wait">
           <Routes>
             <Route path="/" element={<Home />} />
             <Route path="/login" element={<Login />} />
+            <Route path="/create-token" element={<CreatePropertyToken />} />
             <Route path="/liquidity-pool" element={<LiquidityPool />} />
             <Route path="/token-listing" element={<TokenListing />} />
             <Route path="/dashboard" element={<Dashboard />} />
@@ -28,7 +29,6 @@ function App() {
             <Route path="/kyc-verification" element={<KYCVerification />} />
             <Route path="/property-verification" element={<PropertyVerification />} />
           </Routes>
-        </AnimatePresence>
         <Footer />
       </div>
     </Router>

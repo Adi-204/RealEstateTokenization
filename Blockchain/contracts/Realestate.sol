@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.20;
+pragma solidity ^0.8.19;
+
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 
@@ -25,6 +26,7 @@ contract RealEstateTokenFactory is Ownable {
     }
 
     function createRealEstateToken(address _spv, string memory name, string memory symbol) external  {
+        require(_spv != address(0), "Invalid SPV address");
         RealEstate newToken = new RealEstate(_spv, name, symbol);
         realEstateTokens.push(RealEstateToken({
             tokenAddress: address(newToken),
@@ -34,7 +36,6 @@ contract RealEstateTokenFactory is Ownable {
             isRented: false,
             rentalIncome: 0
         }));
-
         emit TokenCreated(address(newToken), _spv);
     }
 
@@ -46,11 +47,12 @@ contract RealEstateTokenFactory is Ownable {
         require(index < realEstateTokens.length, "Index out of bounds");
         return realEstateTokens[index];
     }
+
 }
 
 contract RealEstate is ERC20, Ownable {
     address public spv;
-    uint256 public constant TOTAL_SUPPLY = 1_000_000 ;
+    uint256 public constant TOTAL_SUPPLY = 1_000_000 * 10**18;
     uint256 public constant SPV_MINIMUM_SHARE = (TOTAL_SUPPLY * 51) / 100;
     uint256 public tokenPrice;
     uint256 public lastPriceUpdate;
@@ -62,17 +64,18 @@ contract RealEstate is ERC20, Ownable {
     mapping(address => uint256) public equity;
     address[] public investors;
 
-    constructor(address _spv, string memory name, string memory symbol) ERC20(name, symbol) Ownable(_spv){
+    constructor(address _spv, string memory name, string memory symbol) ERC20(name, symbol) Ownable(_spv) {
+        require(_spv != address(0), "Invalid SPV address");
         spv = _spv;
         _mint(spv, TOTAL_SUPPLY);
         equity[spv] = TOTAL_SUPPLY;
         lastPriceUpdate = block.timestamp;
         tokenPrice = 0.01 ether;
         investors.push(_spv);
-        _transferOwnership(_spv);
     }
 
-    function setTokenPrice(uint256 newPrice) external payable {
+    function setTokenPrice(uint256 newPrice) external payable onlyOwner {
+        require(msg.sender == spv, "Only SPV can update price");
         if (block.timestamp > lastPriceUpdate + UPDATE_INTERVAL) {
             require(msg.value == PENALTY_AMOUNT, "SPV must pay penalty in ETH");
             _distributePenalty();
@@ -110,7 +113,8 @@ contract RealEstate is ERC20, Ownable {
         payable(owner()).transfer(address(this).balance);
     }
 
-    function setRentalStatus(bool status, uint256 amount) external payable {
+    function setRentalStatus(bool status, uint256 amount) external payable onlyOwner {
+        require(msg.sender == spv, "Only SPV can set rental status");
         if (status) {
             require(msg.value == amount, "Incorrect rental income sent");
             rentalIncome = amount;
@@ -152,13 +156,13 @@ contract RealEstateLiquidityPool {
     /**
      * @notice Adds liquidity (ETH) to the pool
      */
-    function addLiquidity(address seller) external payable {
+    function addLiquidity() external payable {
         require(msg.value > 0, "Must send ETH to add liquidity");
 
         // Update investor's contribution
-        investors[seller].ethInvested += msg.value;
-        if(investors[seller].ethInvested == msg.value){
-            investor.push(seller);
+        investors[msg.sender].ethInvested += msg.value;
+        if(investors[msg.sender].ethInvested == msg.value){
+            investor.push(msg.sender);
         }
         totalLiquidity += msg.value;
         emit LiquidityAdded(msg.sender, msg.value);
@@ -226,5 +230,3 @@ contract RealEstateLiquidityPool {
      */
     receive() external payable {}
 }
-
-//1 eth : 1000000000000000000
