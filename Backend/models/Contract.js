@@ -6,6 +6,16 @@ const ContractSchema = new mongoose.Schema({
         required: true,
         unique: true
     },
+    totalTokens: {
+        type: Number,
+        default: 0,
+        required: true,
+    },
+    location: {
+        type: String,
+        default: "Pune",
+        required: true,
+    },
     contractDetails: [
         {
             walletId: {
