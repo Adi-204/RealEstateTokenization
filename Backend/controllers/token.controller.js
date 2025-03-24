@@ -36,9 +36,12 @@ const addTokens = async (req, res) => {
         const existingIndex = contractDetails.findIndex(detail => detail.walletId === walletID);
 
         if (existingIndex !== -1) {
+            contractDetails.total-=contractDetails[existingIndex].numOfTokens;
+            contractDetails.total+=numTokens;
             contractDetails[existingIndex].numOfTokens = numTokens;
         } else {
             const newContract = { walletId: walletID, numOfTokens: numTokens };
+            contractDetails.total+=numTokens;
             contractDetails.push(newContract);
         }
 
@@ -71,6 +74,7 @@ const delTokens = async (req, res) => {
 
         if (existingIndex !== -1) {
             contractDetails[existingIndex].numOfTokens -= numTokens;
+            contract.total-=numTokens
             if (contractDetails[existingIndex].numOfTokens <= 0) {
                 contractDetails.splice(existingIndex, 1);
             }

@@ -4,6 +4,7 @@ import { motion } from 'framer-motion';
 import { Building2, DollarSign, Users, Clock } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { ethers } from 'ethers';
+import axios from "axios"
 
 import RealEstateTokenFactoryAbi from "../abi/RealEstateTokenFactory";
 import RealEstateTokenAbi from '../abi/RealEstateToken';
@@ -13,31 +14,13 @@ const FACTORY_CONTRACT_ADDRESS = "0x5FbDB2315678afecb367f032d93F642f64180aa3";
 const TokenListing = () => {
   const navigate = useNavigate();
 
-  const propertie = [
-    {
-      id: 1,
-      name: "Luxury Apartment Complex",
-      location: "Downtown Manhattan",
-      price: "2,500,000",
-      tokens: "1,000,000",
-      tokenPrice: "2.50",
-      occupancy: "95%",
-      image: "https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?ixlib=rb-1.2.1&auto=format&fit=crop&w=1350&q=80"
-    },
-    {
-      id: 2,
-      name: "Commercial Office Space",
-      location: "Silicon Valley",
-      price: "5,000,000",
-      tokens: "2,000,000",
-      tokenPrice: "2.50",
-      occupancy: "88%",
-      image: "https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?ixlib=rb-1.2.1&auto=format&fit=crop&w=1350&q=80"
-    },
-  ];
-
+  const image=["https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?ixlib=rb-1.2.1&auto=format&fit=crop&w=1350&q=80","https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?ixlib=rb-1.2.1&auto=format&fit=crop&w=1350&q=80"]
   const [properties, setProperties] = useState([]);
-
+  function getRandomImage(imageArray) {
+    const randomIndex = Math.floor(Math.random() * imageArray.length);
+    return imageArray[randomIndex];
+  }
+  
     useEffect(() => {
       async function fetchTokens() {
         if (!window.ethereum) return alert("MetaMask not detected");
@@ -48,7 +31,9 @@ const TokenListing = () => {
 
         const tokenCount = await factoryContract.getTokenCount();
         let tokenList = [];
-        console.log(tokenCount)
+
+        // const propData=await axios.get('localhost:3000/api/getDetails');
+
         for (let i = 0; i < tokenCount; i++) {
           const tokenData = await factoryContract.getToken(i);
 
@@ -64,11 +49,14 @@ const TokenListing = () => {
             id: tokenData.tokenAddress,
             name: name,
             location: "Unknown", // Add location info if stored on-chain
+            // location: propData.data.tokenData.tokenAddress,
             price: ethers.formatEther(totalTokens * tokenPrice), // Total value in ETH
             tokens: ethers.formatUnits(totalTokens, 18),
             tokenPrice: ethers.formatEther(tokenPrice),
             occupancy: tokenData.isRented ? "Rented" : "Vacant",
-            image: "https://via.placeholder.com/400", // Placeholder image, replace with real ones
+            image: getRandomImage(image), // Placeholder image, replace with real ones
+            // tokensAvailable:propData.data.tokenData.tokenAddress,
+            tokensAvailable:0,
           });
         }
 
@@ -118,7 +106,7 @@ const TokenListing = () => {
                     className="w-full h-full object-cover"
                   />
                   <div className="absolute top-4 right-4 bg-blue-600 text-white px-3 py-1 rounded-full text-sm">
-                    {property.occupancy} Occupied
+                    {property.occupancy} 
                   </div>
                 </div>
 
@@ -142,13 +130,15 @@ const TokenListing = () => {
                     <div>
                       <p className="text-gray-400 text-sm">Available Tokens</p>
                       <p className="text-xl font-semibold text-green-500">
-                        {Math.floor(property.tokens * 0.3).toLocaleString()}
+                        {property.tokensAvailable}
                       </p>
                     </div>
                   </div>
 
                   <div className="flex space-x-4">
-                    <button className="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-2 rounded-lg transition-colors">
+                    <button className="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-2 rounded-lg transition-colors" onClick={()=>
+                      navigate(`/seller-listing/${property.id}`)
+                    }>
                       Buy Tokens
                     </button>
                     <button className="flex-1 bg-slate-700 hover:bg-slate-600 text-white py-2 rounded-lg transition-colors">

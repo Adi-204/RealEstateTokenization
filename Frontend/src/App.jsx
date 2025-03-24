@@ -12,6 +12,7 @@ import Verification from './pages/Verification';
 import KYCVerification from './pages/KYCVerification';
 import PropertyVerification from './pages/PropertyVerification';
 import CreatePropertyToken from './pages/CreatePropertyToken';
+import SellerListings from './pages/SellerListings';
 
 function App() {
   return (
@@ -28,6 +29,7 @@ function App() {
             <Route path="/verification" element={<Verification />} />
             <Route path="/kyc-verification" element={<KYCVerification />} />
             <Route path="/property-verification" element={<PropertyVerification />} />
+            <Route path="/seller-listing/:id" element={<SellerListings/>} />
           </Routes>
         <Footer />
       </div>
