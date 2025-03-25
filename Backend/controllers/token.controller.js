@@ -3,7 +3,7 @@ const Contract = require("../models/Contract.js");
 
 const getTokens = async (req, res) => {
     try {
-        const { contractId } = req.body;
+        const {contractId } = req.params;
         const contract = await Contract.findOne({ contractId });
         if (!contract) {
             throw new Error("Contract not found");
@@ -126,4 +126,15 @@ const delTokens = async (req, res) => {
     }
 }
 
-module.exports = { getTokens, addTokens, delTokens, getAllTokens, setLocation };
+const deleteAllContracts = async (req, res) => {
+    try {
+        await Contract.deleteMany({});
+        res.status(200).json({ message: "All contracts deleted successfully" });
+    } catch (error) {
+        res.status(500).json({
+            message: error.message || "Something went wrong - please try again later!"
+        });
+    }
+};
+
+module.exports = { getTokens, addTokens, delTokens, getAllTokens, setLocation ,deleteAllContracts};
