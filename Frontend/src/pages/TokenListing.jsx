@@ -36,22 +36,22 @@ const TokenListing = () => {
 
         for (let i = 0; i < tokenCount; i++) {
           const tokenData = await factoryContract.getToken(i);
-
-          const tokenContract = new ethers.Contract(tokenData.tokenAddress, RealEstateTokenAbi, signer);
-
+          console.log(tokenData[0])
+          const tokenContract = new ethers.Contract(tokenData[0], RealEstateTokenAbi, signer);
           // Fetching additional details from the token contract
+
           const name = await tokenContract.name();
           const symbol = await tokenContract.symbol();
           const totalTokens = await tokenContract.totalSupply();
           const tokenPrice = await tokenContract.tokenPrice();
-
+          console.log(tokenPrice,totalTokens)
           tokenList.push({
             id: tokenData.tokenAddress,
             name: name,
             location: "Unknown", // Add location info if stored on-chain
             // location: propData.data.tokenData.tokenAddress,
             price: ethers.formatEther(totalTokens * tokenPrice), // Total value in ETH
-            tokens: ethers.formatUnits(totalTokens, 18),
+            tokens: ethers.formatUnits(totalTokens, 0),
             tokenPrice: ethers.formatEther(tokenPrice),
             occupancy: tokenData.isRented ? "Rented" : "Vacant",
             image: getRandomImage(image), // Placeholder image, replace with real ones
@@ -117,11 +117,11 @@ const TokenListing = () => {
                   <div className="grid grid-cols-2 gap-4 mb-6">
                     <div>
                       <p className="text-gray-400 text-sm">Property Value</p>
-                      <p className="text-xl font-semibold">${property.price}</p>
+                      <p className="text-xl font-semibold">{property.price} ETH</p>
                     </div>
                     <div>
                       <p className="text-gray-400 text-sm">Token Price</p>
-                      <p className="text-xl font-semibold">${property.tokenPrice}</p>
+                      <p className="text-xl font-semibold">{property.tokenPrice} ETH</p>
                     </div>
                     <div>
                       <p className="text-gray-400 text-sm">Total Tokens</p>

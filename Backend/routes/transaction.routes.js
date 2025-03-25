@@ -3,7 +3,7 @@ const { getTransaction, setTransaction } = require("../controllers/transaction.c
 
 const router = express.Router();
 
-router.route("/get").get(getTransaction);
+router.route("/:walletID").get(getTransaction);
 router.route("/set").post(setTransaction);
 
 module.exports = router;

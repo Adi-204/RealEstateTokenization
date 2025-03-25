@@ -35,9 +35,9 @@ const CreatePropertyToken = () => {
 
             const newContractAddress = event.args[0];
             console.log("New contract deployed at:", newContractAddress);
-
+            
             // Call backend API to store contract and location
-            await axios.post("/api/property/add", {
+            await axios.post("http://localhost:3000/api/token/setlocation", {
                 contractId: newContractAddress,
                 location: location,
             });

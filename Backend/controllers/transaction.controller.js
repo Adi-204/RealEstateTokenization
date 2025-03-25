@@ -3,8 +3,14 @@ const Transaction = require("../models/Transaction.js");
 
 const getTransaction = async (req, res) => {
     try {
-        const { walletID } = req.body;
+        const { walletID } = req.params;
+        
         const transaction = await Transaction.findOne({ walletId: walletID });
+        console.log(transaction)
+        if (!transaction) {
+            return res.status(200).json([]);
+        }
+
         res.status(200).json(transaction.transactionDetails);
     } catch (error) {
         res.status(500).json({
