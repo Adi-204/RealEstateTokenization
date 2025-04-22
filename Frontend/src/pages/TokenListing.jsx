@@ -32,14 +32,14 @@ const TokenListing = () => {
         const tokenCount = await factoryContract.getTokenCount();
         let tokenList = [];
 
-        // const propData=await axios.get('localhost:3000/api/getDetails');
-
+        const propData=await axios.get('http://localhost:3000/api/token/getall');
+        console.log(propData.data);
         for (let i = 0; i < tokenCount; i++) {
           const tokenData = await factoryContract.getToken(i);
           console.log(tokenData[0])
           const tokenContract = new ethers.Contract(tokenData[0], RealEstateTokenAbi, signer);
           // Fetching additional details from the token contract
-
+          console.log(propData.data[tokenData[0]].location);
           const name = await tokenContract.name();
           const symbol = await tokenContract.symbol();
           const totalTokens = await tokenContract.totalSupply();
@@ -48,15 +48,15 @@ const TokenListing = () => {
           tokenList.push({
             id: tokenData.tokenAddress,
             name: name,
-            location: "Unknown", // Add location info if stored on-chain
-            // location: propData.data.tokenData.tokenAddress,
-            price: ethers.formatEther(totalTokens * tokenPrice), // Total value in ETH
+            // location: "Unknown",
+            location: propData.data[tokenData[0]].location,
+            price: ethers.formatEther(totalTokens * tokenPrice), 
             tokens: ethers.formatUnits(totalTokens, 0),
             tokenPrice: ethers.formatEther(tokenPrice),
             occupancy: tokenData.isRented ? "Rented" : "Vacant",
-            image: getRandomImage(image), // Placeholder image, replace with real ones
-            // tokensAvailable:propData.data.tokenData.tokenAddress,
-            tokensAvailable:0,
+            image: getRandomImage(image),
+            tokensAvailable:propData.data[tokenData[0]].totalTokens,
+            // tokensAvailable:0,
           });
         }
 

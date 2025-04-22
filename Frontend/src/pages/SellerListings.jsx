@@ -21,6 +21,7 @@ const SellerListings = () => {
   const [listedLiquidityTokens, setListedLiquidityTokens] = useState(0);
 
   useEffect(() => {
+    if(!window.ethereum)return;
     const transformContractDetails = (contractDetails) => {
       return contractDetails.map((item) => ({
         seller: item.walletId,
@@ -38,8 +39,12 @@ const SellerListings = () => {
           setSellers([]); // Set an empty array to prevent errors
           return;
         }
+        const provider = new ethers.BrowserProvider(window.ethereum);
+        const signer = await provider.getSigner();
+        const userAddr = await signer.getAddress();
         const newarr=transformContractDetails(response.data);
-        const t=newarr.filter(s=>s.seller===userAddress);
+        const t=newarr.filter(s=>s.seller===userAddr);
+        console.log(t)
         if(t.length>0){
           setListedTokens(t[0].tokensForSale);
         }
@@ -107,7 +112,7 @@ const SellerListings = () => {
         numTokens: updatedAmount,
         contractId: id,
       });
-      setListedTokens(updatedAmount)
+      setListedTokens(Number(updatedAmount))
       setSellers((prevSellers) => {
         const updatedSellers = prevSellers.filter((s) => s.seller !== userAddress);
         return [{ seller: userAddress, tokensForSale: updatedAmount }, ...updatedSellers];
@@ -210,11 +215,6 @@ const SellerListings = () => {
 
     }
   }
-
-  useEffect(()=>{
-    if(!userAddress)return;
-    
-  },[sellers,userAddress])
 
   return (
     <div className="pt-20 pb-12 min-h-screen bg-gray-900 text-white">
