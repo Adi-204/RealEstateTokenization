@@ -24,17 +24,23 @@ const getAllTokens = async (req, res) => {
         if (!contracts.length) {
             throw new Error("Contract not found");
         }
+
         let contractMap = {};
         contracts.forEach(contract => {
-            contractMap[contract.contractId] = contract.totalTokens;
+            contractMap[contract.contractId] = {
+                totalTokens: contract.totalTokens,
+                location: contract.location
+            };
         });
+
         res.status(200).json(contractMap);
     } catch (error) {
         res.status(500).json({
             message: error.message || "Something went wrong - please try again later!"
         });
     }
-}
+};
+
 
 const setLocation = async (req, res) => {
     try {

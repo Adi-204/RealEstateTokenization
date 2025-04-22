@@ -56,5 +56,15 @@ const setTransaction = async (req, res) => {
     }
 };
 
+const deleteAllContracts = async (req, res) => {
+    try {
+        await Transaction.deleteMany({});
+        res.status(200).json({ message: "All contracts deleted successfully" });
+    } catch (error) {
+        res.status(500).json({
+            message: error.message || "Something went wrong - please try again later!"
+        });
+    }
+};
 
-module.exports = { getTransaction, setTransaction };
+module.exports = { getTransaction, setTransaction , deleteAllContracts};
