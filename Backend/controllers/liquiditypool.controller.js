@@ -3,16 +3,18 @@ const Contract = require("../models/LiquidityPoolRequests.js");
 
 const postSellRequests = async (req, res) => {
     try {
-        const { seller, tokenAddress, totalTokens } = req.body;
+        console.log(req.body)
+        const { seller, tokenAddress, totalTokens , tokenName } = req.body;
 
         let existingRequest = await Contract.findOne({ seller, tokenAddress });
 
         if (existingRequest) {
+            console.log("hr")
             existingRequest.totalTokens = totalTokens;
             await existingRequest.save();
             res.status(200).json({ message: "Sell request updated successfully", request: existingRequest });
         } else {
-            const newRequest = new Contract({ seller, tokenAddress, totalTokens });
+            const newRequest = new Contract({ seller, tokenAddress, totalTokens ,tokenName});
             await newRequest.save();
             res.status(201).json({ message: "Sell request created successfully", request: newRequest });
         }

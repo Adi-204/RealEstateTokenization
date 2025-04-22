@@ -21,10 +21,9 @@ const getTokens = async (req, res) => {
 const getAllTokens = async (req, res) => {
     try {
         const contracts = await Contract.find();
-        if (!contracts.length) {
-            throw new Error("Contract not found");
-        }
-
+        // if (!contracts.length) {
+        //     throw new Error("Contract not found");
+        // }
         let contractMap = {};
         contracts.forEach(contract => {
             contractMap[contract.contractId] = {

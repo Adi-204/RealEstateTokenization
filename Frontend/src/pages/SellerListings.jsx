@@ -191,12 +191,13 @@ const SellerListings = () => {
     if (!contract) return alert("Contract not initialized!");
     console.log(typeof(liquidityAmount))
     if (liquidityAmount <= 0 || liquidityAmount > balance) return alert("Invalid amount!");
-
+    const tokenName = await contract.name();
     try {
       await axios.post("http://localhost:3000/api/liquidityPool/sell-request", {
         seller: userAddress,
         totalTokens: Number(liquidityAmount),
         tokenAddress: id,
+        tokenName: tokenName,
       });
       setListedLiquidityTokens(liquidityAmount);
       alert("Tokens listed in liquidity pool successfully!");
@@ -287,9 +288,9 @@ const SellerListings = () => {
             </div>
             
             <h2 className="text-xl font-semibold mt-6 mb-4">Available Sellers</h2>
-            {sellers.filter((s) => s.seller !== userAddress).length > 0 ? (
+            {sellers.filter((s) => s.seller !== userAddress && s.tokensForSale>0).length > 0 ? (
               <motion.div className="grid gap-4">
-                {sellers.filter((s) => s.seller !== userAddress).map((seller, index) => (
+                {sellers.filter((s) => s.seller !== userAddress && s.tokensForSale>0).map((seller, index) => (
                   <motion.div key={index} className="p-4 bg-gray-700 rounded-lg flex justify-between items-center">
                     {/* Seller Address */}
                     <p className="font-semibold break-all">{seller.seller}</p>

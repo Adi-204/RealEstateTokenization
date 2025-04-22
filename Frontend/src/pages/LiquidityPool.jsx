@@ -5,11 +5,14 @@ import { ethers } from 'ethers';
 import LiquidityPoolAbi from '../abi/LiquidityPoolAbi';
 import axios from 'axios';
 import RealEstateTokenAbi from '../abi/RealEstateToken';
+import RealEstateTokenFactoryAbi from '../abi/RealEstateTokenFactory';
 
 const LIQUIDITY_POOL_ADDRESS = "0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512";
+const FACTORY_CONTRACT_ADDRESS = "0x5FbDB2315678afecb367f032d93F642f64180aa3";
 
 const LiquidityPool = () => {
   const [contract, setContract] = useState(null);
+  const [factoryContract, setfactoryContract] = useState(null);
   const [totalLiquidity, setTotalLiquidity] = useState('0');
   const [totalStakers, setTotalStakers] = useState('0');
   const [amount, setAmount] = useState('');
@@ -19,6 +22,9 @@ const LiquidityPool = () => {
   const [userProfit, setUserProfit] = useState('0');
   const [signer, setSigner] = useState(null);
   const [buyAmount, setBuyAmount] = useState({});
+  const [availableTokens, setAvailableTokens] = useState([]);
+  const [sellAmount, setSellAmount] = useState({});
+
 
   useEffect(() => {
     const set = async () => {
@@ -27,10 +33,32 @@ const LiquidityPool = () => {
       setSigner(signer);
       const poolContract = new ethers.Contract(LIQUIDITY_POOL_ADDRESS, LiquidityPoolAbi, signer);
       setContract(poolContract);
+      const factoryContract = new ethers.Contract(FACTORY_CONTRACT_ADDRESS, RealEstateTokenFactoryAbi, signer);
+      setfactoryContract(factoryContract);
       fetchPoolData(poolContract, signer);
       checkOwner(poolContract, signer);
-      const det=await axios.get('http://localhost:3000/api/liquidityPool/sell-requests');
+      const det = await axios.get('http://localhost:3000/api/liquidityPool/sell-requests');
       setSellRequests(det.data);
+      let tokens = [];
+      const tokenCount = await factoryContract.getTokenCount();
+      for (let i = 0; i < tokenCount; i++) {
+        const tokenData = await factoryContract.getToken(i);
+        const tokenAddress = tokenData[0];
+        const tokenAmount = await poolContract.totalTokensInPool(tokenAddress);
+        if (tokenAmount > 0){
+          const tokenContract = new ethers.Contract(tokenAddress, RealEstateTokenAbi, signer);
+          const tokenName = await tokenContract.name();
+          const price = await tokenContract.tokenPrice();
+          tokens.push({
+            tokenAddress,
+            tokenName,
+            tokenAmount,
+            price,
+          });
+        }
+      }
+      setAvailableTokens(tokens);
+
     }
     set();
   }, []);
@@ -83,18 +111,18 @@ const LiquidityPool = () => {
     }
   };
 
-  const buyToken = async (tokenAddress, amount,id,seller) => {
+  const buyToken = async (tokenAddress, amount, id, seller) => {
     if (!contract || !amount) return;
-    console.log(tokenAddress,amount,seller)
+    console.log(tokenAddress, amount, seller)
     try {
-      const ab= new ethers.Contract(tokenAddress,RealEstateTokenAbi,signer)
-      const cc=await ab.balanceOf(seller);
+      const ab = new ethers.Contract(tokenAddress, RealEstateTokenAbi, signer)
+      const cc = await ab.balanceOf(seller);
       console.log(cc)
-      const tx = await contract.sellTokens(tokenAddress, amount,seller);
+      const tx = await contract.sellTokens(tokenAddress, amount, seller);
       await tx.wait();
-      await axios.post("http://localhost:3000/api/liquidityPool/buy-tokens",{
-        requestId:id,
-        amount:amount
+      await axios.post("http://localhost:3000/api/liquidityPool/buy-tokens", {
+        requestId: id,
+        amount: amount
       })
       fetchPoolData(contract, signer);
       setSellRequests((prevReq) =>
@@ -110,7 +138,22 @@ const LiquidityPool = () => {
       console.error("Token purchase failed", error);
     }
   };
+
+  const createSellRequest = async (tokenAddress, amount) => {
+    if (!amount || isNaN(amount)) return;
+    try {
+      await axios.post("http://localhost:3000/api/token/add", {
+        walletID: LIQUIDITY_POOL_ADDRESS,
+        numTokens: Number(amount),
+        contractId: tokenAddress,
+      });
+      setSellAmount((prev) => ({ ...prev, [tokenAddress]: '' }));
+    } catch (err) {
+      console.error("Failed to create sell request", err);
+    }
+  };
   
+
   return (
     <div className="pt-20 pb-12">
       <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -119,7 +162,7 @@ const LiquidityPool = () => {
         </div>
 
         <div className="grid md:grid-cols-2 gap-8">
-        <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.2 }} className="bg-slate-800/50 p-6 rounded-xl backdrop-blur-sm">
+          <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.2 }} className="bg-slate-800/50 p-6 rounded-xl backdrop-blur-sm">
             <h2 className="text-2xl font-semibold mb-6">Stake ETH</h2>
             <div className="space-y-4">
               <input type="number" value={amount} onChange={(e) => setAmount(e.target.value)} placeholder="Enter amount" className="w-full bg-slate-700/50 rounded-lg py-3 px-4 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500" />
@@ -158,17 +201,78 @@ const LiquidityPool = () => {
             </div>
           </motion.div>
         </div>
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.8 }}
+          className="mt-12 bg-slate-800/50 p-6 rounded-xl backdrop-blur-sm"
+        >
+          <h2 className="text-2xl font-semibold mb-6">Available Tokens in Pool</h2>
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead>
+                <tr className="text-left text-gray-400">
+                  <th>Token Name</th>
+                  <th>Amount in Pool</th>
+                  <th>Token Price</th>
+                  {isOwner && <th>Sell Amount</th>}
+                  {isOwner && <th>Action</th>}
+                </tr>
+              </thead>
+              <tbody className="text-gray-300">
+                {availableTokens.map((token) => (
+                  <tr key={token.tokenAddress} className="border-t border-gray-700">
+                    <td>{token.tokenName}</td>
+                    <td>{token.tokenAmount.toString()}</td>
+                    <td>{ethers.formatEther(token.price)} ETH</td>
+                    {isOwner && (
+                      <>
+                        <td>
+                          <input
+                            type="number"
+                            value={sellAmount[token.tokenAddress] || ''}
+                            onChange={(e) =>
+                              setSellAmount({
+                                ...sellAmount,
+                                [token.tokenAddress]: e.target.value,
+                              })
+                            }
+                            placeholder="Amount"
+                            className="w-20 bg-slate-700/50 rounded-lg py-1 px-2 text-white placeholder-gray-400 focus:outline-none"
+                          />
+                        </td>
+                        <td>
+                          <button
+                            onClick={() =>
+                              createSellRequest(
+                                token.tokenAddress,
+                                sellAmount[token.tokenAddress]
+                              )
+                            }
+                            className="bg-yellow-600 px-3 py-2 rounded-lg text-white"
+                          >
+                            List
+                          </button>
+                        </td>
+                      </>
+                    )}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </motion.div>
 
         {isOwner && (
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.6 }} className="mt-12 bg-slate-800/50 p-6 rounded-xl backdrop-blur-sm">
             <h2 className="text-2xl font-semibold mb-6">Sell Requests</h2>
             <div className="overflow-x-auto">
-            <table className="w-full">
+              <table className="w-full">
                 <thead>
                   <tr className="text-left text-gray-400">
                     <th>Seller</th>
                     <th>Tokens</th>
-                    <th>Token Address</th>
+                    <th>Token Name</th>
                     <th>Buy Amount</th>
                     <th>Action</th>
                   </tr>
@@ -178,7 +282,7 @@ const LiquidityPool = () => {
                     <tr key={request._id} className="border-t border-gray-700">
                       <td>{request.seller}</td>
                       <td>{request.totalTokens}</td>
-                      <td>{request.tokenAddress}</td>
+                      <td>{request.tokenName}</td>
                       <td>
                         <input
                           type="number"
@@ -191,7 +295,7 @@ const LiquidityPool = () => {
                         />
                       </td>
                       <td>
-                        <button onClick={() => buyToken(request.tokenAddress, buyAmount[request._id],request._id,request.seller)} className="bg-green-600 px-3 py-2 rounded-lg text-white flex items-center">
+                        <button onClick={() => buyToken(request.tokenAddress, buyAmount[request._id], request._id, request.seller)} className="bg-green-600 px-3 py-2 rounded-lg text-white flex items-center">
                           <ShoppingCart className="h-5 w-5" />
                         </button>
                       </td>
