@@ -250,7 +250,7 @@ const SellerListings = () => {
           <motion.div className="bg-slate-800 p-6 rounded-lg shadow-lg text-center" initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }}>
             <h1 className="text-2xl font-bold">Sellers for Token</h1>
             <p className="text-gray-400 break-all">Contract: {id}</p>
-            {tokenPrice && <p className="mt-2 text-lg font-semibold text-blue-400">Price per Token: ${tokenPrice}</p>}
+            {tokenPrice && <p className="mt-2 text-lg font-semibold text-blue-400">Price per Token: {tokenPrice} ETH</p>}
           </motion.div>
           <motion.div className="mt-6 bg-gray-800 p-6 rounded-lg shadow-lg" initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }}>
               <h2 className="text-xl font-semibold mb-4">Your Listings</h2>

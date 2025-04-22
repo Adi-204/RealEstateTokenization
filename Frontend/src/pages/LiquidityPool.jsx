@@ -81,6 +81,7 @@ const LiquidityPool = () => {
   const stakeEth = async () => {
     if (!contract || !amount) return;
     try {
+      console.log(ethers.parseEther(amount));
       const tx = await contract.addLiquidity({ value: ethers.parseEther(amount) });
       await tx.wait();
       fetchPoolData(contract, signer);
@@ -106,6 +107,17 @@ const LiquidityPool = () => {
       const tx = await contract.withdrawProfits();
       await tx.wait();
       fetchPoolData(contract, signer);
+    } catch (error) {
+      console.error("Profit withdrawal failed", error);
+    }
+  };
+
+  const distribute = async () => {
+    if (!contract) return;
+    try {
+      console.log(ethers.parseEther(amount));
+      const tx = await contract.distributeRent(ethers.parseEther(amount));
+      await tx.wait();
     } catch (error) {
       console.error("Profit withdrawal failed", error);
     }
@@ -173,6 +185,10 @@ const LiquidityPool = () => {
               <button onClick={withdrawEth} className="w-full bg-slate-700 hover:bg-slate-600 text-white py-3 rounded-lg flex items-center justify-center space-x-2 transition-colors">
                 <ArrowUpDown className="h-5 w-5" />
                 <span>Withdraw ETH</span>
+              </button>
+              <button onClick={distribute} className="w-full bg-slate-700 hover:bg-slate-600 text-white py-3 rounded-lg flex items-center justify-center space-x-2 transition-colors">
+                <ArrowUpDown className="h-5 w-5" />
+                <span>Distribute Profit</span>
               </button>
             </div>
           </motion.div>

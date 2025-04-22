@@ -256,11 +256,11 @@ contract RealEstateLiquidityPool is Ownable{
 
     /**
      * @notice Distributes rent profit proportionally to liquidity providers
-     * @param rentProfit Total rent profit in ETH to be distributed
      */
-    function distributeRent(uint256 rentProfit) external payable {
-        require(msg.value == rentProfit, "Sent ETH must match rent profit");
-        require(totalLiquidity > 0, "No investors in pool");
+    function distributeRent(uint256 val) external  {
+        // require(msg.value == rentProfit, "Sent ETH must match rent profit");
+        // require(msg.value > 0, "No investors in pool");
+        // require(msg.value>0,"No ETH Sent");
 
         uint256 totalDistributed = 0;
 
@@ -268,7 +268,7 @@ contract RealEstateLiquidityPool is Ownable{
         for (uint i = 0; i < investor.length; i++) {
             address investorAddress = investor[i];
             uint256 share = (investors[investorAddress].ethInvested *
-                rentProfit) / totalLiquidity;
+                val) / totalLiquidity;
             investors[investorAddress].profitShare += share;
             totalDistributed += share;
         }

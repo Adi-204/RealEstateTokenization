@@ -158,7 +158,7 @@ const Dashboard = () => {
                         <p className={`font-medium ${tx.isBuy ? 'text-green-400' : 'text-red-400'}`}>
                           {tx.isBuy ? '+' : '-'}{tx.amount} ETH
                         </p>
-                        <p className="text-sm text-gray-400">{tx.isBuy ? "Bought" : "Sold"}</p>
+                        <p className="text-sm text-gray-400">{tx.isBuy ? "Sold" : "Bought"}</p>
                       </div>
                     </div>
                   ))}
